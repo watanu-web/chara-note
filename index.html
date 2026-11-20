@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHARA NOTE</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;background:#fff9fb;color:#66535e;
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+}
+header{
+  text-align:center;padding:30px 15px 22px;
+  background:#fff;border-bottom:1px solid #f4dce6;
+}
+h1{color:#d58da9;font-family:Georgia,serif;font-size:32px;letter-spacing:3px;margin:0}
+.sub{font-size:11px;letter-spacing:3px;color:#c59aaa;margin-top:7px}
+main{max-width:650px;margin:22px auto;padding:0 15px}
+.panel{
+  background:white;border:1px solid #f0d5e0;border-radius:18px;
+  padding:20px;margin-bottom:17px;
+  box-shadow:0 4px 14px #e8cbd633;
+}
+h2{font-size:15px;color:#c77f9d;margin:0 0 16px}
+label{display:block;font-size:12px;color:#a77b8d;margin:12px 0 6px}
+input,textarea{
+  width:100%;border:1px solid #ead3dd;border-radius:10px;
+  padding:12px;background:#fffafd;color:#66535e;
+  font:inherit;font-size:14px;
+}
+textarea{min-height:75px;resize:vertical}
+button{
+  border:0;border-radius:20px;padding:11px 17px;
+  background:#e9b7ca;color:white;font-weight:bold;
+  font-size:13px;margin:5px 4px 5px 0;
+}
+button.secondary{background:#f8e8ee;color:#b47791}
+button.delete{background:#f4eeee;color:#a77b8d}
+.question{
+  border:1px dashed #e8c4d2;border-radius:13px;
+  padding:13px;margin:12px 0;background:#fffafd;
+}
+.question-title{font-size:12px;color:#c77f9d;margin-bottom:8px}
+footer{text-align:center;color:#c99caf;font-size:11px;padding:20px}
+#preview{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div style="color:#e5b4c7;font-size:18px">୨୧ ───────── ୨୧</div>
+  <h1>CHARA NOTE</h1>
+  <div class="sub">MY ORIGINAL CHARACTER PROFILE</div>
+  <div style="color:#e5b4c7;font-size:18px;margin-top:8px">୨୧ ───────── ୨୧</div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>♡ PROFILE</h2>
+    <label>キャラクターの名前</label>
+    <input id="charName" placeholder="名前を入力してね">
+    <label>ひとこと・キャッチコピー</label>
+    <input id="catch" placeholder="この子を一言で表すなら？">
+  </section>
+
+  <section class="panel">
+    <h2>♡ CHARACTER DATA</h2>
+    <div id="questions"></div>
+    <button onclick="addQuestion()">＋ 質問を追加する</button>
+  </section>
+
+  <section class="panel" style="text-align:center">
+    <h2>♡ FINISH</h2>
+    <p style="font-size:12px;color:#aa8b98">
+      入力した内容をかわいい画像にして保存できるよ。
+    </p>
+    <button onclick="saveImage()">プロフィール画像を作る ♡</button>
+    <button class="secondary" onclick="saveDraft()">入力内容を保存</button>
+    <p id="message" style="font-size:12px;color:#c77f9d"></p>
+  </section>
+</main>
+
+<footer>♡ made with love · CHARA NOTE ♡</footer>
+
+<script>
+const questions = document.getElementById("questions");
+
+function addQuestion(q="",a=""){
+  const div=document.createElement("div");
+  div.className="question";
+
+  const title=document.createElement("div");
+  title.className="question-title";
+  title.textContent="♡ QUESTION";
+
+  const question=document.createElement("input");
+  question.placeholder="質問を入力（例：誕生日）";
+  question.className="q";
+  question.value=q;
+
+  const answer=document.createElement("textarea");
+  answer.placeholder="回答を入力してね";
+  answer.className="a";
+  answer.value=a;
+
+  const del=document.createElement("button");
+  del.className="delete";
+  del.textContent="この質問を削除";
+  del.onclick=()=>div.remove();
+
+  div.append(title,question,answer,del);
+  questions.appendChild(div);
+}
+
+function getData(){
+  return {
+    name:document.getElementById("charName").value,
+    catch:document.getElementById("catch").value,
+    items:[...document.querySelectorAll(".question")].map(el=>({
+      q:el.querySelector(".q").value,
+      a:el.querySelector(".a").value
+    }))
+  };
+}
+
+function saveDraft(){
+  localStorage.setItem("charaNoteDraft",JSON.stringify(getData()));
+  document.getElementById("message").textContent="保存したよ ♡";
+}
+
+function loadDraft(){
+  const saved=localStorage.getItem("charaNoteDraft");
+  if(!saved){addQuestion("誕生日","");addQuestion("性格","");return}
+  try{
+    const data=JSON.parse(saved);
+    document.getElementById("charName").value=data.name||"";
+    document.getElementById("catch").value=data.catch||"";
+    (data.items||[]).forEach(item=>addQuestion(item.q,item.a));
+    if(!data.items?.length)addQuestion();
+  }catch(e){addQuestion()}
+}
+
+function saveImage(){
+  const data=getData();
+  const canvas=document.createElement("canvas");
+  const ctx=canvas.getContext("2d");
+  const width=900,pad=65,line=95;
+  const items=data.items.filter(x=>x.q||x.a);
+  const height=390+items.length*line;
+  canvas.width=width;canvas.height=height;
+
+  ctx.fillStyle="#fff9fb";
+  ctx.fillRect(0,0,width,height);
+  ctx.strokeStyle="#e8b9cc";
+  ctx.lineWidth=4;
+  ctx.strokeRect(25,25,width-50,height-50);
+  ctx.strokeStyle="#f1d5e0";
+  ctx.lineWidth=1;
+  ctx.strokeRect(38,38,width-76,height-76);
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#d58da9";
+  ctx.font="bold 48px Georgia";
+  ctx.fillText("CHARA NOTE",width/2,115);
+  ctx.font="20px sans-serif";
+  ctx.fillStyle="#bd91a3";
+  ctx.fillText("♡ MY ORIGINAL CHARACTER PROFILE ♡",width/2,155);
+
+  ctx.font="bold 38px sans-serif";
+  ctx.fillStyle="#805d6c";
+  ctx.fillText(data.name||"Character Name",width/2,230);
+  ctx.font="22px sans-serif";
+  ctx.fillStyle="#b88b9d";
+  ctx.fillText(data.catch||"",width/2,270);
+
+  let y=345;
+  ctx.textAlign="left";
+  items.forEach(item=>{
+    ctx.fillStyle="#d58da9";
+    ctx.font="bold 23px sans-serif";
+    ctx.fillText("♡ "+item.q, pad,y);
+    y+=34;
+    ctx.fillStyle="#66535e";
+    ctx.font="21px sans-serif";
+    const words=Array.from(item.a||"");
+    let lineText="";
+    words.forEach(ch=>{
+      if(ctx.measureText(lineText+ch).width>width-pad*2){
+        ctx.fillText(lineText,pad,y);y+=29;lineText=ch;
+      }else{lineText+=ch}
+    });
+    if(lineText){ctx.fillText(lineText,pad,y);y+=29}
+    y+=28;
+  });
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#d5a5b8";
+  ctx.font="18px Georgia";
+  ctx.fillText("♡ made with love · CHARA NOTE ♡",width/2,height-48);
+
+  const link=document.createElement("a");
+  link.download="chara-note.png";
+  link.href=canvas.toDataURL("image/png");
+  link.click();
+}
+loadDraft();
+</script>
+</body>
+</html>
